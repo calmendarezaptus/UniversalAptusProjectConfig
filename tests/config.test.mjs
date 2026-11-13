@@ -5,7 +5,7 @@ import ts from 'typescript'
 
 const toModule = source => 'data:text/javascript;base64,' + Buffer.from(ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2023, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')
 const read = file => fs.readFileSync(new URL(file, import.meta.url), 'utf8')
-const api = read('../src/lib/api.ts').replace('import.meta.env.DEV', 'true').replace('import.meta.env.VITE_API_BASE_URL', 'undefined').replace('import.meta.env.VITE_CALENDAR_URL', 'undefined')
+const api = read('../src/lib/api.ts').replace('import.meta.env.DEV', 'true').replace('import.meta.env.VITE_API_BASE_URL', 'undefined').replace('import.meta.env.VITE_CALENDAR_URL', 'undefined').replace('import.meta.env.VITE_LAWYERS_URL', 'undefined')
 const lib = await import(toModule(read('../src/lib/config.ts').replace("from './api'", `from '${toModule(api)}'`)))
 
 const proyecto = { id: 25, nombre: '[DEMO] Iguala corporativa mensual', cliente_id: '446794000015629019', moneda: 'MXN', activo: 1, tipo_cobro: 'iguala', honorario_fijo: 25000, zoho_tax_id: null }

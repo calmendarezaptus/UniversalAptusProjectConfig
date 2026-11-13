@@ -3,7 +3,7 @@ import 'animate.css'
 import { Toaster, toast } from 'sonner'
 import {
   BadgeDollarSign, Briefcase, Check, FileText, Info, Landmark, Pencil, Plus, Repeat, RefreshCw, Save, Search,
-  Settings2, ShieldCheck, Trash2, User, UserCheck, Users, X, Clock,
+  Settings2, Trash2, User, UserCheck, Users, X, Clock,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -15,13 +15,13 @@ import { StatusModal, type StatusModalType } from '@/components/StatusModal'
 import { SearchSelect } from '@/components/SearchSelect'
 import { ThemeMenu } from '@/components/ThemeMenu'
 import { cn } from '@/lib/utils'
-import { CALENDAR_URL } from '@/lib/api'
+import { CALENDAR_URL, lawyersUrl } from '@/lib/api'
 import { cardCls, gradientBtnCls, inputCls, labelCls, sectionIconCls, sectionTitleCls, useTheme } from '@/lib/ui'
 import { loadAbogados, loadClientes, loadNiveles, loadProyectos, type Abogado, type Cliente, type Option, type Proyecto } from '@/lib/catalogs'
 import {
   buildPatch, createResponsable, createTarifa, deleteResponsable, deleteTarifa, formatMoney, formFromProyecto, getClienteConfig,
   getElegibles, getImpuestos, getProyecto, getResponsables, getTarifas, MONEDAS, parseMoney, puedeRol, resolverResponsables, resolverTarifa,
-  ROL_ASIGNAR_LABEL, ROL_LABEL, setElegible, tarifaQuien, TIPO_COBRO_LABEL, TIPO_RESPONSABLE_LABEL, updateProyecto, updateTarifa,
+  ROL_ASIGNAR_LABEL, ROL_LABEL, tarifaQuien, TIPO_COBRO_LABEL, TIPO_RESPONSABLE_LABEL, updateProyecto, updateTarifa,
   type DatosForm, type Impuesto, type ProyectoDetalle, type ResolverResponsables, type ResolverTarifa, type Responsable, type Rol, type RolAsignar,
   type Tarifa, type TipoCobro, type TipoResponsable,
 } from '@/lib/config'
@@ -221,20 +221,6 @@ function App() {
     .map(a => ({ ...a, secondary: TIPO_RESPONSABLE_LABEL[elegibles.map.get(Number(a.ID))!] })), [abogados.rows, elegibles.map, nuevoRol])
   useEffect(() => { if (nuevoAbogado && !candidatos.some(c => c.ID === nuevoAbogado)) setNuevoAbogado('') }, [candidatos, nuevoAbogado])
 
-  const changeElegible = (a: Abogado, tipo: TipoResponsable | null) => run(async () => {
-    if (!organizationId) return
-    await setElegible(organizationId, a.ID, tipo)
-    setElegibles(s => { const map = new Map(s.map); if (tipo) map.set(Number(a.ID), tipo); else map.delete(Number(a.ID)); return { ...s, map } })
-    toast.success(tipo ? `${a.display}: responsable de ${TIPO_RESPONSABLE_LABEL[tipo].toLowerCase()}.` : `${a.display} ya no puede ser responsable.`)
-  }, 'No se guardó el cambio')
-
-  const [view, setView] = useState<'proyecto' | 'abogados'>('proyecto')
-  const [filtroAbogado, setFiltroAbogado] = useState('')
-  const abogadosFiltrados = useMemo(() => {
-    const q = filtroAbogado.trim().toLowerCase()
-    return abogados.rows.filter(a => !q || a.display.toLowerCase().includes(q) || (a.secondary || '').toLowerCase().includes(q))
-  }, [abogados.rows, filtroAbogado])
-
   const addResponsable = () => run(async () => {
     if (!organizationId || !detalle) return
     if (!nuevoAbogado) throw new Error('Selecciona el abogado responsable.')
@@ -288,7 +274,7 @@ function App() {
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Configuración del proyecto</h1>
                 <ThemeMenu theme={theme} setTheme={setTheme} />
               </div>
-              <p className="text-slate-500 text-sm mt-0.5">Tipo de cobro, IVA, tarifas y responsables del proyecto, y quién puede ser responsable</p>
+              <p className="text-slate-500 text-sm mt-0.5">Tipo de cobro, IVA, tarifas y responsables del proyecto en Aptus</p>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0 w-full lg:w-auto">
@@ -308,66 +294,6 @@ function App() {
         {detalleError && <p role="alert" className="relative z-10 mb-2 text-xs text-red-700">{detalleError}</p>}
 
         <div className="space-y-4 relative z-10">
-          <div role="tablist" className="inline-flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-            {([{ k: 'proyecto', l: 'Proyecto', I: Briefcase }, { k: 'abogados', l: 'Abogados responsables', I: ShieldCheck }] as const).map(({ k, l, I }) => (
-              <button key={k} role="tab" aria-selected={view === k} type="button" onClick={() => setView(k)}
-                className={cn('flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all',
-                  view === k ? 'bg-gradient-to-r from-theme-from to-theme-to text-white shadow-sm' : 'text-slate-500 hover:text-theme-text hover:bg-theme-light')}>
-                <I className="w-4 h-4" />{l}
-              </button>
-            ))}
-          </div>
-
-          {view === 'abogados' ? (
-            <div className={cardCls} inert={saving}>
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className={sectionIconCls} />
-                  <span className={sectionTitleCls}>Quién puede ser responsable</span>
-                </div>
-                <button type="button" onClick={() => void loadElegibles()} disabled={elegibles.loading} aria-label="Actualizar abogados responsables"
-                  className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 disabled:opacity-50">
-                  <RefreshCw className={cn('w-3.5 h-3.5 text-slate-500', elegibles.loading && 'animate-spin')} />
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 mb-3">Solo los abogados marcados se pueden asignar como responsables en los proyectos. <b>General</b> cubre facturación y cobranza. Quitar la marca no quita las asignaciones que ya tenga.</p>
-              {elegibles.error && <p role="alert" className="text-xs text-red-700 mb-3 rounded-lg border border-red-200 bg-red-50 p-2">{elegibles.error}</p>}
-              {abogados.error && <p role="alert" className="text-xs text-red-700 mb-2">{abogados.error}</p>}
-              <div className="relative mb-3 max-w-sm">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <Input value={filtroAbogado} onChange={e => setFiltroAbogado(e.target.value)} placeholder="Buscar abogado o nivel..." className={cn(inputCls, 'pl-8')} />
-              </div>
-              {abogados.loading ? <p className="text-xs text-slate-500">Cargando abogados…</p> : (
-                <ul className="divide-y divide-slate-100">
-                  {abogadosFiltrados.map(a => {
-                    const actual = elegibles.map.get(Number(a.ID)) ?? null
-                    return (
-                      <li key={a.ID} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2.5">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {a.fotoUrl ? <img src={a.fotoUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" /> : <div className="w-8 h-8 rounded-full bg-theme-light text-theme-text flex items-center justify-center shrink-0"><User className="w-4 h-4" /></div>}
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-800 truncate">{a.display}</p>
-                            {a.secondary && <p className="text-[11px] text-slate-500">{a.secondary}</p>}
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap bg-slate-50 p-1 rounded-lg border border-slate-200" aria-label={`Responsable: ${a.display}`}>
-                          {([null, 'facturacion', 'cobranza', 'general'] as const).map(t => (
-                            <button key={t ?? 'no'} type="button" disabled={!!elegibles.error || elegibles.loading} aria-pressed={actual === t} onClick={() => { if (actual !== t) void changeElegible(a, t) }}
-                              className={cn('px-2.5 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50', actual === t
-                                ? (t ? 'bg-gradient-to-r from-theme-from to-theme-to text-white shadow-sm' : 'bg-white text-slate-700 shadow-sm border border-slate-200')
-                                : 'text-slate-500 hover:bg-theme-light')}>
-                              {t ? TIPO_RESPONSABLE_LABEL[t] : 'No'}
-                            </button>
-                          ))}
-                        </div>
-                      </li>
-                    )
-                  })}
-                  {!abogadosFiltrados.length && <li className="py-3 text-xs text-slate-500">No se encontraron abogados.</li>}
-                </ul>
-              )}
-            </div>
-          ) : (<>
           {/* ── Selección ──────────────────────────────────────────────── */}
           <div className={cardCls}>
             <div className="flex items-center gap-2 mb-4">
@@ -617,7 +543,7 @@ function App() {
                       loading={abogados.loading || elegibles.loading} placeholder="Seleccionar abogado" searchPlaceholder="Buscar abogado..."
                       emptyText={nuevoRol === 'ambos' ? 'Ningún abogado es responsable general.' : 'Ningún abogado puede ser responsable de este rol.'} withAvatar />
                     {elegibles.error ? <p role="alert" className="text-[11px] text-red-700">{elegibles.error}</p>
-                      : <p className="text-[11px] text-slate-500">Solo aparecen los abogados marcados para {nuevoRol === 'ambos' ? 'ambos roles (generales)' : ROL_LABEL[nuevoRol].toLowerCase() + ' o generales'}. <button type="button" onClick={() => setView('abogados')} className="underline text-theme-text">Abogados responsables</button></p>}
+                      : <p className="text-[11px] text-slate-500">Solo aparecen los abogados marcados para {nuevoRol === 'ambos' ? 'ambos roles (generales)' : ROL_LABEL[nuevoRol].toLowerCase() + ' o generales'}. <a href={lawyersUrl(organizationId)} target="_blank" rel="noopener" className="underline text-theme-text">Configuración de abogados</a></p>}
                     <Button onClick={() => void addResponsable()} disabled={saving || !nuevoAbogado} className={cn('h-9 w-full border-0 disabled:opacity-50', gradientBtnCls)}>Asignar al proyecto</Button>
                   </div>
                 </div>
@@ -629,7 +555,6 @@ function App() {
               </p>
             </div>
           )}
-          </>)}
         </div>
       </Card>
 

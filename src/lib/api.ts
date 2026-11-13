@@ -7,3 +7,7 @@ export const API_BASE = import.meta.env.DEV
 
 // A dónde regresa "Cancelar" si no llega ?origin= (calendario consolidado).
 export const CALENDAR_URL = import.meta.env.VITE_CALENDAR_URL || 'https://universal-aptus-calendar.onslate.com/'
+
+// Configuración de abogados (proyecto Configuración): ahí se marca quién puede ser responsable.
+export const LAWYERS_URL = import.meta.env.VITE_LAWYERS_URL || 'https://universal-aptus-lawyersettings.onslate.com/'
+export const lawyersUrl = (org: string | null) => `${LAWYERS_URL}?organization_id=${encodeURIComponent(org || '')}`

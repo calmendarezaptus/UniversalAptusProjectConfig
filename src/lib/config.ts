@@ -83,8 +83,6 @@ export const updateTarifa = (org: string, id: number, tarifa: number) => write<T
 export const deleteTarifa = (org: string, id: number) => write<unknown>(org, 'DELETE', `tarifas/${id}`, undefined, false)
 export const createResponsable = (org: string, body: { rol: RolAsignar; abogado_id: number; proyecto_id: number }) => write<{ id: number; asignados: Responsable[] }>(org, 'POST', 'responsables', body)
 export const getElegibles = (org: string, signal?: AbortSignal) => read<Elegible[]>(org, 'abogados-responsables', signal)
-export const setElegible = (org: string, abogadoId: string, tipo: TipoResponsable | null) =>
-  write<Elegible>(org, 'PATCH', `abogados/${encodeURIComponent(abogadoId)}/responsable`, { tipo }, false)
 export const deleteResponsable = (org: string, id: number) => write<unknown>(org, 'DELETE', `responsables/${id}`, undefined, false)
 
 // Montos: "1,234.5" → 1234.5; máximo 2 decimales; ≥ 0.
