@@ -7,6 +7,14 @@ export const TIPO_COBRO_LABEL: Record<TipoCobro, string> = { horas: 'Por hora', 
 export const MONEDAS = ['MXN', 'USD', 'EUR'] as const
 export type Rol = 'facturacion' | 'cobranza'
 export const ROL_LABEL: Record<Rol, string> = { facturacion: 'Facturación', cobranza: 'Cobranza' }
+// Qué puede ser cada abogado como responsable. "general" cubre facturación y cobranza.
+export type TipoResponsable = Rol | 'general'
+export const TIPO_RESPONSABLE_LABEL: Record<TipoResponsable, string> = { facturacion: 'Facturación', cobranza: 'Cobranza', general: 'General (ambos)' }
+export interface Elegible { abogado_id: number; tipo: TipoResponsable }
+export type RolAsignar = Rol | 'ambos'
+export const ROL_ASIGNAR_LABEL: Record<RolAsignar, string> = { facturacion: 'Facturación', cobranza: 'Cobranza', ambos: 'Ambos' }
+export const puedeRol = (tipo: TipoResponsable | null | undefined, rol: RolAsignar) =>
+  tipo === 'general' || (rol !== 'ambos' && tipo === rol)
 
 export interface ProyectoDetalle {
   id: number; nombre: string; cliente_id: string; cliente_nombre?: string; moneda: string; activo: number
@@ -68,7 +76,10 @@ export const updateProyecto = (org: string, id: string, patch: Record<string, un
 export const createTarifa = (org: string, body: { proyecto_id: number; moneda: string; tarifa: number; abogado_id?: number; tipo_id?: number }) => write<Tarifa>(org, 'POST', 'tarifas', body)
 export const updateTarifa = (org: string, id: number, tarifa: number) => write<Tarifa>(org, 'PATCH', `tarifas/${id}`, { tarifa })
 export const deleteTarifa = (org: string, id: number) => write<unknown>(org, 'DELETE', `tarifas/${id}`, undefined, false)
-export const createResponsable = (org: string, body: { rol: Rol; nombre: string; proyecto_id: number }) => write<Responsable>(org, 'POST', 'responsables', body)
+export const createResponsable = (org: string, body: { rol: RolAsignar; abogado_id: number; proyecto_id: number }) => write<{ id: number; asignados: Responsable[] }>(org, 'POST', 'responsables', body)
+export const getElegibles = (org: string, signal?: AbortSignal) => read<Elegible[]>(org, 'abogados-responsables', signal)
+export const setElegible = (org: string, abogadoId: string, tipo: TipoResponsable | null) =>
+  write<Elegible>(org, 'PATCH', `abogados/${encodeURIComponent(abogadoId)}/responsable`, { tipo }, false)
 export const deleteResponsable = (org: string, id: number) => write<unknown>(org, 'DELETE', `responsables/${id}`, undefined, false)
 
 // Montos: "1,234.5" → 1234.5; máximo 2 decimales; ≥ 0.

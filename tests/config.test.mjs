@@ -53,3 +53,12 @@ test('escrituras: rutas y métodos; red caída es incierta; 409 de la API conser
   globalThis.fetch = async () => ({ ok: false, status: 409, json: async () => ({ error: 'La moneda solo se puede cambiar sin capturas', stage: 'update_proyecto', outcome_unknown: false }) })
   await assert.rejects(lib.updateProyecto('1', '25', { moneda: 'USD' }), e => e.uncertain === false && /moneda/.test(e.message))
 })
+
+test('quién puede cubrir cada rol: general cubre ambos', () => {
+  assert.equal(lib.puedeRol('general', 'ambos'), true)
+  assert.equal(lib.puedeRol('general', 'cobranza'), true)
+  assert.equal(lib.puedeRol('facturacion', 'facturacion'), true)
+  assert.equal(lib.puedeRol('facturacion', 'cobranza'), false)
+  assert.equal(lib.puedeRol('cobranza', 'ambos'), false)
+  assert.equal(lib.puedeRol(undefined, 'facturacion'), false)
+})
