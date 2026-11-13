@@ -597,7 +597,8 @@ function App() {
                       <ul className="space-y-1">
                         {responsables.rows.map(r => (
                           <li key={r.id} className="flex items-center justify-between gap-2 text-sm">
-                            <span><span className="text-slate-500">{ROL_LABEL[r.rol]}:</span> <b className="text-slate-800">{r.nombre}</b></span>
+                            <span><span className="text-slate-500">{ROL_LABEL[r.rol]}:</span> <b className="text-slate-800">{r.nombre}</b>
+                              {r.abogado_cubre_rol === false && <span className="ml-1.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">ya no está marcado</span>}</span>
                             <button type="button" aria-label={`Quitar a ${r.nombre}`} onClick={() => removeResponsable(r)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
                           </li>
                         ))}

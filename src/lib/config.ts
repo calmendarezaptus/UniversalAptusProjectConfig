@@ -26,7 +26,12 @@ export interface Tarifa {
   abogado_nombre?: string | null; tipo_nombre?: string | null; nivel: string; nivel_etiqueta?: string
 }
 export interface Impuesto { zoho_id: string; nombre: string; porcentaje: number; tipo: string }
-export interface Responsable { id: number; rol: Rol; nombre: string; proyecto_id: number | null; cliente_id?: string | null }
+export interface Responsable {
+  id: number; rol: Rol; nombre: string; proyecto_id: number | null; cliente_id?: string | null
+  abogado_id?: number | null
+  // false = al abogado le quitaron la marca o está inactivo (la asignación sigue contando)
+  abogado_cubre_rol?: boolean | null
+}
 export interface ResolverTarifa {
   moneda: string; aplicada: { orden: number; nivel: string; etiqueta: string; tarifa: number; tarifa_id: number } | null
   cadena: Array<{ orden: number; nivel: string; etiqueta?: string; tarifa: number | null }>; aviso: string | null
