@@ -25,6 +25,7 @@ import {
   type DatosForm, type Impuesto, type ProyectoDetalle, type ResolverResponsables, type ResolverTarifa, type Responsable, type Rol, type RolAsignar,
   type Tarifa, type TipoCobro, type TipoResponsable,
 } from '@/lib/config'
+import { MenuButton } from '@/components/MenuButton'
 
 type Modal = { isOpen: boolean; type: StatusModalType; title: string; message: string }
 type Loadable<T> = { rows: T[]; loading: boolean; error: string }
@@ -273,6 +274,7 @@ function App() {
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Configuración del proyecto</h1>
                 <ThemeMenu theme={theme} setTheme={setTheme} />
+                <MenuButton />
               </div>
               <p className="text-slate-500 text-sm mt-0.5">Tipo de cobro, IVA, tarifas y responsables del proyecto en Aptus</p>
             </div>
